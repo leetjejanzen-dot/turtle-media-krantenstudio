@@ -2,7 +2,6 @@ const { app, BrowserWindow, dialog, ipcMain, net, shell } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { spawn } = require('node:child_process');
 const { PDFDocument } = require('pdf-lib');
 
 let mainWindow;
@@ -10,6 +9,8 @@ let pendingUpdate = null;
 
 // Voorkomt GPU-driverproblemen op uiteenlopende Windows-pc's; de editor heeft geen 3D-versnelling nodig.
 app.disableHardwareAcceleration();
+// Behoud de bestaande lokale projecten bij de kortere Windows-appnaam.
+app.setPath('userData', path.join(app.getPath('appData'), 'Turtle Media Krantenstudio'));
 
 async function readPublisherConfig() {
   const configPath = app.isPackaged
@@ -43,8 +44,8 @@ function isNewerVersion(candidate, current) {
 
 function assertGithubUrl(rawUrl) {
   const url = new URL(rawUrl);
-  const allowed = ['github.com', 'objects.githubusercontent.com', 'release-assets.githubusercontent.com'];
-  if (url.protocol !== 'https:' || !allowed.includes(url.hostname)) throw new Error('Onveilige update-URL geweigerd');
+  const allowed = url.hostname === 'github.com' || url.hostname.endsWith('.githubusercontent.com');
+  if (url.protocol !== 'https:' || !allowed) throw new Error('Onveilige update-URL geweigerd');
   return url.toString();
 }
 
@@ -59,6 +60,54 @@ async function fetchBuffer(url, maxBytes = 300 * 1024 * 1024) {
   return bytes;
 }
 
+function sendUpdateProgress(stage, percent, message) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.send('update-progress', { stage, percent, message });
+}
+
+async function downloadInstaller(update, installerPath) {
+  const maxBytes = 300 * 1024 * 1024;
+  const temporaryPath = `${installerPath}.download`;
+  await fs.rm(temporaryPath, { force: true });
+  const response = await net.fetch(assertGithubUrl(update.installerUrl), { redirect: 'follow' });
+  assertGithubUrl(response.url);
+  if (!response.ok || !response.body) throw new Error(`Download mislukt (${response.status})`);
+  const total = Number(response.headers.get('content-length') || 0);
+  if (total > maxBytes) throw new Error('Updatebestand is onverwacht groot');
+  const reader = response.body.getReader();
+  const file = await fs.open(temporaryPath, 'w');
+  const hash = crypto.createHash('sha256');
+  let downloaded = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = Buffer.from(value);
+      downloaded += chunk.length;
+      if (downloaded > maxBytes) throw new Error('Updatebestand is onverwacht groot');
+      await file.write(chunk);
+      hash.update(chunk);
+      const percent = total ? Math.min(99, Math.round((downloaded / total) * 100)) : null;
+      sendUpdateProgress('download', percent, percent === null ? 'Update downloaden…' : `Update downloaden… ${percent}%`);
+    }
+  } catch (error) {
+    await reader.cancel().catch(() => {});
+    throw error;
+  } finally {
+    await file.close();
+  }
+  if (!downloaded) throw new Error('Het gedownloade updatebestand is leeg');
+  sendUpdateProgress('verify', 100, 'Beveiligingscontrole uitvoeren…');
+  const actual = hash.digest('hex');
+  if (actual !== update.expectedHash) {
+    await fs.rm(temporaryPath, { force: true });
+    throw new Error('Beveiligingscontrole mislukt: het bestand is niet compleet');
+  }
+  await fs.rm(installerPath, { force: true });
+  await fs.rename(temporaryPath, installerPath);
+  return downloaded;
+}
+
 function createWindow() {
   const smokeTest = process.argv.includes('--smoke-test');
   mainWindow = new BrowserWindow({
@@ -69,7 +118,7 @@ function createWindow() {
     backgroundColor: '#101114',
     icon: path.join(__dirname, 'src', 'assets', 'turtle-media-app-icon.png'),
     show: !smokeTest,
-    title: 'Turtle Media Creator Hub',
+    title: 'Turtle Media',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -90,7 +139,7 @@ function createWindow() {
           document.getElementById('openNewspaper').click();
           const editorOpens = hubView.hidden && !editorView.hidden;
           document.getElementById('newProject').click();
-          const required = ['hubView','editorView','openNewspaper','backToHub','hubUpdateButton','paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton'];
+          const required = ['hubView','editorView','openNewspaper','backToHub','hubUpdateButton','paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton','updateDialog','updateInstall','updateManual','updateProgress'];
           const missing = required.filter(id => !document.getElementById(id));
           const logo = document.getElementById('vLogo');
           const editor = document.querySelector('.editor');
@@ -121,9 +170,20 @@ function createWindow() {
             activePageNumber: document.getElementById('vPageNumber').textContent
           };
         })()`);
-        const image = await mainWindow.webContents.capturePage();
         await fs.mkdir(path.join(__dirname, 'test-output'), { recursive: true });
-        await fs.writeFile(path.join(__dirname, 'test-output', 'app-smoke.png'), image.toPNG());
+        await mainWindow.webContents.executeJavaScript(`document.getElementById('openNewspaper').click()`);
+        const editorImage = await mainWindow.webContents.capturePage();
+        await fs.writeFile(path.join(__dirname, 'test-output', 'app-smoke.png'), editorImage.toPNG());
+        const modalState = await mainWindow.webContents.executeJavaScript(`(() => {
+          availableUpdate = { currentVersion: '1.0.3', version: '1.1.0' };
+          showUpdateDialog();
+          const dialog = document.getElementById('updateDialog');
+          return { hidden: dialog.hidden, display: getComputedStyle(dialog).display, installEnabled: !document.getElementById('updateInstall').disabled, rect: dialog.getBoundingClientRect().toJSON() };
+        })()`);
+        console.log(JSON.stringify({ modalState }));
+        await mainWindow.webContents.executeJavaScript(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+        const updateImage = await mainWindow.webContents.capturePage();
+        await fs.writeFile(path.join(__dirname, 'test-output', 'update-dialog-smoke.png'), updateImage.toPNG());
         console.log(JSON.stringify(result));
         if (result.missing.length || result.name !== 'TURTLE MEDIA' || !result.logoLoaded
           || result.newspaperLayoutWidth !== 794 || !result.editorScrollable || !result.bottomActionsVisible
@@ -213,13 +273,21 @@ ipcMain.handle('check-updates', async () => {
   const installer = assets.find(asset => /Turtle-Media-Krantenstudio-Setup-.*-x64\.exe$/i.test(asset.name));
   const checksum = installer && assets.find(asset => asset.name === `${installer.name}.sha256`);
   if (!version || !installer || !checksum || !isNewerVersion(version, app.getVersion())) return { ...base, available: false };
+  const digest = String(installer.digest || '').match(/^sha256:([a-f0-9]{64})$/i)?.[1]?.toLowerCase();
+  let expectedHash = digest;
+  if (!expectedHash) {
+    const checksumFile = await fetchBuffer(checksum.browser_download_url, 4096);
+    expectedHash = checksumFile.toString('utf8').match(/[a-f0-9]{64}/i)?.[0]?.toLowerCase();
+  }
+  if (!expectedHash) throw new Error('De uitgever heeft geen geldige checksum meegestuurd');
   pendingUpdate = {
     version,
     installerName: path.basename(installer.name),
     installerUrl: assertGithubUrl(installer.browser_download_url),
-    checksumUrl: assertGithubUrl(checksum.browser_download_url)
+    expectedHash,
+    releaseUrl: assertGithubUrl(release.html_url)
   };
-  return { ...base, available: true, version, notes: String(release.body || '').slice(0, 1000) };
+  return { ...base, available: true, version, notes: String(release.body || '').slice(0, 1000), releaseUrl: pendingUpdate.releaseUrl };
 });
 
 ipcMain.handle('open-store', async () => {
@@ -234,18 +302,20 @@ ipcMain.handle('open-store', async () => {
 ipcMain.handle('install-update', async () => {
   if (!pendingUpdate) throw new Error('Controleer eerst op updates');
   const update = pendingUpdate;
-  const [installer, checksumFile] = await Promise.all([
-    fetchBuffer(update.installerUrl),
-    fetchBuffer(update.checksumUrl, 4096)
-  ]);
-  const expected = checksumFile.toString('utf8').match(/[a-f0-9]{64}/i)?.[0]?.toLowerCase();
-  const actual = crypto.createHash('sha256').update(installer).digest('hex');
-  if (!expected || actual !== expected) throw new Error('Updatecontrole mislukt: checksum klopt niet');
   const updateDir = path.join(app.getPath('temp'), 'TurtleMediaKrantenstudio');
   await fs.mkdir(updateDir, { recursive: true });
   const installerPath = path.join(updateDir, update.installerName);
-  await fs.writeFile(installerPath, installer);
-  spawn(installerPath, [], { detached: true, stdio: 'ignore', windowsHide: false }).unref();
-  setTimeout(() => app.quit(), 500);
+  sendUpdateProgress('download', 0, 'Veilige download voorbereiden…');
+  await downloadInstaller(update, installerPath);
+  sendUpdateProgress('launch', 100, 'Installer openen…');
+  const launchError = await shell.openPath(installerPath);
+  if (launchError) throw new Error(`Windows kon de installer niet openen: ${launchError}`);
+  setTimeout(() => app.quit(), 1400);
   return { started: true };
+});
+
+ipcMain.handle('open-manual-update', async () => {
+  if (!pendingUpdate) throw new Error('Controleer eerst op updates');
+  await shell.openExternal(assertGithubUrl(pendingUpdate.installerUrl));
+  return { opened: true };
 });

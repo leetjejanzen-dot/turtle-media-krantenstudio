@@ -112,6 +112,38 @@ $('openNewspaper').addEventListener('click', showEditor);
 $('backToHub').addEventListener('click', showHub);
 showHub();
 
+let availableUpdate = null;
+function setUpdateButtons(label, disabled = false) {
+  for (const id of ['updateButton','hubUpdateButton']) {
+    const button = $(id);
+    button.hidden = false;
+    button.disabled = disabled;
+    button.textContent = label;
+    button.dataset.available = 'true';
+  }
+}
+function cleanUpdateError(error) {
+  const raw = error && error.message ? error.message : String(error || 'Onbekende fout');
+  return raw.replace(/^Error invoking remote method '[^']+': Error:\s*/i, '').slice(0, 240);
+}
+function setUpdateDialogOpen(open) {
+  $('updateDialog').hidden = !open;
+  document.body.classList.toggle('modal-open', open);
+}
+function showUpdateDialog() {
+  if (!availableUpdate) return;
+  $('updateCurrentVersion').textContent = `Versie ${availableUpdate.currentVersion}`;
+  $('updateNextVersion').textContent = `Versie ${availableUpdate.version}`;
+  $('updateDescription').textContent = `Versie ${availableUpdate.version} bevat de nieuwste verbeteringen voor jouw Creator Suite.`;
+  $('updateError').hidden = true;
+  $('updateProgressWrap').hidden = true;
+  $('updateInstall').disabled = false;
+  $('updateManual').disabled = false;
+  $('updateLater').disabled = false;
+  $('updateInstall').textContent = 'Nu bijwerken';
+  setUpdateDialogOpen(true);
+}
+
 async function initializePublisherLinks() {
   try {
     const update = await window.desktop.checkUpdates();
@@ -120,13 +152,11 @@ async function initializePublisherLinks() {
       $('hubFourthwallButton').hidden = false;
     }
     if (update.available) {
-      for (const id of ['updateButton','hubUpdateButton']) {
-        $(id).hidden = false;
-        $(id).textContent = `Update ${update.version} beschikbaar`;
-        $(id).dataset.available = 'true';
-      }
+      availableUpdate = update;
+      setUpdateButtons(`Update ${update.version}`);
     }
-  } catch {
+  } catch (error) {
+    console.warn('Updatecontrole overgeslagen:', cleanUpdateError(error));
     // De app blijft volledig bruikbaar wanneer de updatecontrole offline is.
   }
 }
@@ -135,22 +165,45 @@ async function openStore() {
 }
 $('fourthwallButton').addEventListener('click', openStore);
 $('hubFourthwallButton').addEventListener('click', openStore);
-async function installAvailableUpdate(sourceButton) {
-  if (sourceButton.dataset.available !== 'true') return;
-  const updateButtons = [$('updateButton'),$('hubUpdateButton')];
-  for (const button of updateButtons) {
-    button.disabled = true;
-    button.textContent = 'Update downloaden…';
-  }
-  try { await window.desktop.installUpdate(); }
-  catch {
-    for (const button of updateButtons) {
-      button.disabled = false;
-      button.textContent = 'Update opnieuw proberen';
-    }
-    toast('De update kon niet veilig worden geïnstalleerd');
+async function installAvailableUpdate() {
+  $('updateError').hidden = true;
+  $('updateProgressWrap').hidden = false;
+  $('updateInstall').disabled = true;
+  $('updateManual').disabled = true;
+  $('updateLater').disabled = true;
+  $('updateInstall').textContent = 'Bezig…';
+  setUpdateButtons('Update wordt geïnstalleerd…', true);
+  try {
+    await window.desktop.installUpdate();
+  } catch (error) {
+    const message = cleanUpdateError(error);
+    $('updateError').textContent = message;
+    $('updateError').hidden = false;
+    $('updateProgressWrap').hidden = true;
+    $('updateInstall').disabled = false;
+    $('updateManual').disabled = false;
+    $('updateLater').disabled = false;
+    $('updateInstall').textContent = 'Opnieuw proberen';
+    setUpdateButtons('Update opnieuw proberen');
   }
 }
-$('updateButton').addEventListener('click',event=>installAvailableUpdate(event.currentTarget));
-$('hubUpdateButton').addEventListener('click',event=>installAvailableUpdate(event.currentTarget));
+$('updateButton').addEventListener('click',showUpdateDialog);
+$('hubUpdateButton').addEventListener('click',showUpdateDialog);
+$('updateInstall').addEventListener('click',installAvailableUpdate);
+$('updateManual').addEventListener('click',async()=>{
+  try { await window.desktop.openManualUpdate(); }
+  catch (error) {
+    $('updateError').textContent = cleanUpdateError(error);
+    $('updateError').hidden = false;
+  }
+});
+for (const element of [$('updateClose'),$('updateLater'),...document.querySelectorAll('[data-close-update]')]) {
+  element.addEventListener('click',()=>setUpdateDialogOpen(false));
+}
+window.desktop.onUpdateProgress(progress=>{
+  $('updateProgressWrap').hidden = false;
+  $('updateProgress').style.width = `${Math.max(0,Math.min(100,Number(progress.percent) || 0))}%`;
+  $('updateProgress').classList.toggle('indeterminate', progress.percent === null);
+  $('updateProgressText').textContent = progress.message || 'Update verwerken…';
+});
 initializePublisherLinks();

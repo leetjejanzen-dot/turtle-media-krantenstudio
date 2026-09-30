@@ -58,17 +58,18 @@
 
   <section id="editorView" class="app-view editor-view" hidden>
     <header class="appbar">
+      <button id="backToHub" class="icon-button" title="Terug naar Creator Hub" aria-label="Terug naar Creator Hub">←</button>
       <img class="app-logo" src="assets/turtle-media-logo.png" alt="Turtle Media">
-      <div><strong>Turtle Media Krantenstudio</strong><span>Nieuws maken voor jouw FiveM-stad</span></div>
+      <div class="editor-brand"><strong>Krantenstudio</strong><span><i></i> Project wordt lokaal bewaard</span></div>
       <nav>
-        <button id="backToHub" class="ghost">← Hub</button>
         <button id="fourthwallButton" class="ghost" hidden>Fourthwall</button>
         <button id="updateButton" class="update" hidden>Update beschikbaar</button>
-        <button id="newProject" class="ghost">Nieuw</button>
+        <span class="nav-divider"></span>
+        <button id="newProject" class="ghost">＋ Nieuw</button>
         <button id="loadProject" class="ghost">Openen</button>
         <button id="saveProject" class="ghost">Opslaan</button>
-        <button id="exportPng">Export PNG</button>
-        <button id="exportPdf" class="accent">Export PDF</button>
+        <button id="exportPng" class="export-button">PNG</button>
+        <button id="exportPdf" class="accent">PDF exporteren</button>
       </nav>
     </header>
 
@@ -130,7 +131,7 @@ Onze verslaggever sprak met ondernemers, hulpdiensten en omwonenden. Zij zien vo
 
     <section class="preview-area">
       <div class="preview-toolbar">
-        <span>Live voorbeeld</span>
+        <span class="canvas-title"><i></i> Live canvas</span>
         <div class="zoom-tools">
           <button id="zoomOut" class="ghost" title="Uitzoomen">−</button>
           <button id="zoomFit" class="ghost">Passend</button>
@@ -162,6 +163,28 @@ Onze verslaggever sprak met ondernemers, hulpdiensten en omwonenden. Zij zien vo
     </section>
     </main>
   </section>
+  <div id="updateDialog" class="update-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+    <div class="update-backdrop" data-close-update></div>
+    <section class="update-card">
+      <button id="updateClose" class="update-close" type="button" aria-label="Sluiten">×</button>
+      <div class="update-emblem" aria-hidden="true"><span>↟</span></div>
+      <p class="update-kicker">Turtle Media Creator Suite</p>
+      <h2 id="updateTitle">Een nieuwe versie staat klaar</h2>
+      <p id="updateDescription" class="update-description">Download de nieuwste verbeteringen veilig vanuit GitHub.</p>
+      <div class="update-version-row"><span id="updateCurrentVersion">Huidig</span><b>→</b><span id="updateNextVersion">Nieuw</span></div>
+      <div id="updateProgressWrap" class="update-progress-wrap" hidden>
+        <div class="update-progress-track"><span id="updateProgress"></span></div>
+        <p id="updateProgressText">Download voorbereiden…</p>
+      </div>
+      <div id="updateError" class="update-error" hidden></div>
+      <div class="update-actions">
+        <button id="updateLater" class="ghost" type="button">Later</button>
+        <button id="updateManual" class="ghost" type="button">Handmatig downloaden</button>
+        <button id="updateInstall" class="accent" type="button">Nu bijwerken</button>
+      </div>
+      <p class="update-security">SHA-256 gecontroleerd • Rechtstreeks van de officiële GitHub-release</p>
+    </section>
+  </div>
   <div id="toast" role="status"></div>
   <script src="../node_modules/html2canvas/dist/html2canvas.min.js"></script>
   <script src="app.js"></script>

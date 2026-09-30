@@ -1,7 +1,7 @@
 {
   "name": "fivem-krantenstudio",
   "version": "1.1.0",
-  "description": "Windows krantengenerator voor Turtle Media",
+  "description": "Turtle Media Creator Suite voor Windows",
   "main": "main.js",
   "author": "Turtle Media",
   "license": "MIT",
@@ -21,7 +21,7 @@
   },
   "build": {
     "appId": "nl.fivem.krantenstudio",
-    "productName": "Turtle Media Krantenstudio",
+    "productName": "Turtle Media",
     "asar": true,
     "files": [
       "main.js",
