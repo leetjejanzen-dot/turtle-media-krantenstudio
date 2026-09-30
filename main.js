@@ -79,6 +79,8 @@ function createWindow() {
     mainWindow.webContents.once('did-finish-load', async () => {
       try {
         const result = await mainWindow.webContents.executeJavaScript(`(() => {
+          localStorage.removeItem('fivem-krantenstudio-autosave');
+          document.getElementById('newProject').click();
           const required = ['paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton'];
           const missing = required.filter(id => !document.getElementById(id));
           const logo = document.getElementById('vLogo');
