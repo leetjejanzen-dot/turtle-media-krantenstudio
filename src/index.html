@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turtle Media Krantenstudio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="appbar">
+    <img class="app-logo" src="assets/turtle-media-logo.png" alt="Turtle Media">
+    <div><strong>Turtle Media Krantenstudio</strong><span>Nieuws maken voor jouw FiveM-stad</span></div>
+    <nav>
+      <button id="fourthwallButton" class="ghost" hidden>Fourthwall</button>
+      <button id="updateButton" class="update" hidden>Update beschikbaar</button>
+      <button id="newProject" class="ghost">Nieuw</button>
+      <button id="loadProject" class="ghost">Openen</button>
+      <button id="saveProject" class="ghost">Opslaan</button>
+      <button id="exportPng">Export PNG</button>
+      <button id="exportPdf" class="accent">Export PDF</button>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <aside class="editor">
+      <section class="pages-section">
+        <div class="section-title"><span>00</span> Pagina’s</div>
+        <div id="pageTabs" class="page-tabs"></div>
+        <div class="page-actions">
+          <button id="addPage" type="button">+ Pagina</button>
+          <button id="duplicatePage" class="ghost" type="button">Dupliceren</button>
+          <button id="deletePage" class="danger" type="button">Verwijderen</button>
+        </div>
+      </section>
+      <section>
+        <div class="section-title"><span>01</span> Uitgeverij</div>
+        <label>Naam krant<input id="paperName" value="TURTLE MEDIA" maxlength="36"></label>
+        <label>Slogan<input id="tagline" value="Altijd boven op het nieuws" maxlength="90"></label>
+        <div class="two">
+          <label>Editie<input id="edition" value="AVONDEDITIE" maxlength="24"></label>
+          <label>Prijs<input id="price" value="$2.50" maxlength="12"></label>
+        </div>
+        <label>Logo
+          <span class="file-row"><input id="logoFile" type="file" accept="image/*"><button id="clearLogo" class="small ghost" type="button">Wissen</button></span>
+        </label>
+      </section>
+
+      <section>
+        <div class="section-title"><span>02</span> Hoofdverhaal</div>
+        <label>Rubriek<input id="category" value="STADSNIEUWS" maxlength="28"></label>
+        <label>Kop<textarea id="headline" rows="3" maxlength="130">NIEUWE ONTWIKKELINGEN BRENGEN DE STAD IN BEWEGING</textarea></label>
+        <label>Intro<textarea id="dek" rows="3" maxlength="260">Bewoners reageren enthousiast op de plannen die vandaag zijn gepresenteerd.</textarea></label>
+        <label>Artikel<textarea id="article" rows="8">De stad stond vandaag in het teken van verandering. Tijdens een drukbezochte bijeenkomst werden nieuwe plannen gepresenteerd die het dagelijks leven van bewoners moeten verbeteren.
+
+Onze verslaggever sprak met ondernemers, hulpdiensten en omwonenden. Zij zien vooral kansen voor samenwerking, veiligheid en nieuwe activiteiten. De komende dagen maakt de organisatie meer details bekend.</textarea></label>
+        <div class="two">
+          <label>Auteur<input id="author" value="Redactie Turtle Media" maxlength="50"></label>
+          <label>Locatie<input id="location" value="Los Santos" maxlength="35"></label>
+        </div>
+        <label>Hoofdfoto<input id="heroFile" type="file" accept="image/*"></label>
+        <label>Bijschrift<input id="caption" value="De stad maakt zich op voor een nieuw hoofdstuk." maxlength="120"></label>
+      </section>
+
+      <section>
+        <div class="section-title"><span>03</span> Vormgeving</div>
+        <div class="two colors">
+          <label>Accentkleur<input id="accentColor" type="color" value="#b4232c"></label>
+          <label>Papierkleur<input id="paperColor" type="color" value="#f3efe5"></label>
+        </div>
+        <label>Stijl<select id="theme"><option value="classic">Klassiek</option><option value="modern">Modern</option><option value="tabloid">Tabloid</option></select></label>
+        <label class="check"><input id="breaking" type="checkbox" checked><span>Toon breaking-newsbalk</span></label>
+        <label>Breaking-tekst<input id="breakingText" value="BREAKING — VOLG ONS VOOR LIVE UPDATES" maxlength="80"></label>
+      </section>
+      <div class="editor-actions">
+        <button id="exportPngBottom">Export PNG</button>
+        <button id="exportPdfBottom" class="accent">Export PDF</button>
+      </div>
+    </aside>
+
+    <section class="preview-area">
+      <div class="preview-toolbar">
+        <span>Live voorbeeld</span>
+        <div class="zoom-tools">
+          <button id="zoomOut" class="ghost" title="Uitzoomen">−</button>
+          <button id="zoomFit" class="ghost">Passend</button>
+          <span id="zoomLabel">100%</span>
+          <button id="zoomIn" class="ghost" title="Inzoomen">+</button>
+        </div>
+        <span id="status">Alle wijzigingen worden lokaal bewaard</span>
+      </div>
+      <div class="paper-wrap">
+        <article id="newspaper" class="newspaper classic">
+          <div class="paper-topline"><span id="vEdition">AVONDEDITIE</span><span id="vDate"></span><span id="vPrice">$2.50</span></div>
+          <header class="masthead">
+            <img id="vLogo" src="assets/turtle-media-logo.png" alt="Turtle Media-logo">
+            <div><h1 id="vPaperName">TURTLE MEDIA</h1><p id="vTagline">Altijd boven op het nieuws</p></div>
+          </header>
+          <div id="vBreaking" class="breaking">BREAKING — VOLG ONS VOOR LIVE UPDATES</div>
+          <main class="story">
+            <p id="vCategory" class="category">STADSNIEUWS</p>
+            <h2 id="vHeadline">NIEUWE ONTWIKKELINGEN BRENGEN DE STAD IN BEWEGING</h2>
+            <p id="vDek" class="dek">Bewoners reageren enthousiast op de plannen die vandaag zijn gepresenteerd.</p>
+            <div id="heroFrame" class="hero placeholder"><span>Voeg een hoofdfoto toe</span><img id="vHero" alt="Hoofdfoto"></div>
+            <p id="vCaption" class="caption">De stad maakt zich op voor een nieuw hoofdstuk.</p>
+            <div class="byline"><strong id="vAuthor">Redactie Turtle Media</strong><span id="vLocation">Los Santos</span></div>
+            <div id="vArticle" class="article-text"></div>
+          </main>
+          <footer><span id="vFooterName">TURTLE MEDIA</span><span>Betrouwbaar • Snel • Dichtbij</span><span id="vPageNumber">01</span></footer>
+        </article>
+      </div>
+    </section>
+  </main>
+  <div id="toast" role="status"></div>
+  <script src="../node_modules/html2canvas/dist/html2canvas.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

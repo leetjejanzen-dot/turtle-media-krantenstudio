@@ -1,0 +1,59 @@
+{
+  "name": "fivem-krantenstudio",
+  "version": "1.0.2",
+  "description": "Windows krantengenerator voor Turtle Media",
+  "main": "main.js",
+  "author": "Turtle Media",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "electron . --smoke-test",
+    "dist": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "electron": "^38.1.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "nl.fivem.krantenstudio",
+    "productName": "Turtle Media Krantenstudio",
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "node_modules/html2canvas/**/*",
+      "node_modules/pdf-lib/**/*",
+      "node_modules/@pdf-lib/**/*",
+      "node_modules/pako/**/*",
+      "node_modules/tslib/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "publisher-config.json",
+        "to": "publisher-config.json"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "artifactName": "Turtle-Media-Krantenstudio-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
