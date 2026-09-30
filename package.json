@@ -43,6 +43,7 @@
       "output": "release"
     },
     "win": {
+      "icon": "src/assets/turtle-media.ico",
       "target": [
         "portable",
         "nsis"

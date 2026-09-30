@@ -64,6 +64,7 @@ function createWindow() {
     minWidth: 1120,
     minHeight: 720,
     backgroundColor: '#101114',
+    icon: path.join(__dirname, 'src', 'assets', 'turtle-media-app-icon.png'),
     show: !smokeTest,
     title: 'Turtle Media Krantenstudio',
     webPreferences: {
