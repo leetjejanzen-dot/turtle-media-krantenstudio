@@ -3,7 +3,9 @@
   "version": "1.1.0",
   "description": "Turtle Media Creator Suite voor Windows",
   "main": "main.js",
-  "author": "Turtle Media",
+  "author": {
+    "name": "Turtle Investment"
+  },
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -22,6 +24,7 @@
   "build": {
     "appId": "nl.fivem.krantenstudio",
     "productName": "Turtle Media",
+    "copyright": "Copyright © 2026 Turtle Investment",
     "asar": true,
     "files": [
       "main.js",
