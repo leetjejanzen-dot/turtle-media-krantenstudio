@@ -69,7 +69,7 @@ function createWindow() {
     backgroundColor: '#101114',
     icon: path.join(__dirname, 'src', 'assets', 'turtle-media-app-icon.png'),
     show: !smokeTest,
-    title: 'Turtle Media Krantenstudio',
+    title: 'Turtle Media Creator Hub',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -83,23 +83,39 @@ function createWindow() {
       try {
         const result = await mainWindow.webContents.executeJavaScript(`(() => {
           localStorage.removeItem('fivem-krantenstudio-autosave');
+          const hubView = document.getElementById('hubView');
+          const editorView = document.getElementById('editorView');
+          const hubStartsVisible = !hubView.hidden && editorView.hidden;
+          const videoSoonDisabled = document.querySelector('.video-tool').disabled;
+          document.getElementById('openNewspaper').click();
+          const editorOpens = hubView.hidden && !editorView.hidden;
           document.getElementById('newProject').click();
-          const required = ['paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton'];
+          const required = ['hubView','editorView','openNewspaper','backToHub','hubUpdateButton','paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton'];
           const missing = required.filter(id => !document.getElementById(id));
           const logo = document.getElementById('vLogo');
           const editor = document.querySelector('.editor');
           editor.scrollTop = editor.scrollHeight;
           const initialPageCount = document.querySelectorAll('.page-tab').length;
           document.getElementById('addPage').click();
+          const newspaperLayoutWidth = document.getElementById('newspaper').offsetWidth;
+          const zoom = document.getElementById('zoomLabel').textContent;
+          const editorScrollable = editor.scrollHeight > editor.clientHeight && editor.scrollTop > 0;
+          const bottomActionsVisible = document.getElementById('exportPngBottom').getBoundingClientRect().bottom <= innerHeight;
+          document.getElementById('backToHub').click();
+          const hubReturns = !hubView.hidden && editorView.hidden;
           return {
             missing,
+            hubStartsVisible,
+            videoSoonDisabled,
+            editorOpens,
+            hubReturns,
             name: document.getElementById('paperName').value,
             headline: document.getElementById('vHeadline').textContent,
             logoLoaded: logo.complete && logo.naturalWidth > 0,
-            newspaperLayoutWidth: document.getElementById('newspaper').offsetWidth,
-            zoom: document.getElementById('zoomLabel').textContent,
-            editorScrollable: editor.scrollHeight > editor.clientHeight && editor.scrollTop > 0,
-            bottomActionsVisible: document.getElementById('exportPngBottom').getBoundingClientRect().bottom <= innerHeight,
+            newspaperLayoutWidth,
+            zoom,
+            editorScrollable,
+            bottomActionsVisible,
             initialPageCount,
             pageCount: document.querySelectorAll('.page-tab').length,
             activePageNumber: document.getElementById('vPageNumber').textContent
@@ -111,7 +127,8 @@ function createWindow() {
         console.log(JSON.stringify(result));
         if (result.missing.length || result.name !== 'TURTLE MEDIA' || !result.logoLoaded
           || result.newspaperLayoutWidth !== 794 || !result.editorScrollable || !result.bottomActionsVisible
-          || result.initialPageCount !== 1 || result.pageCount !== 2 || result.activePageNumber !== '02') process.exitCode = 1;
+          || result.initialPageCount !== 1 || result.pageCount !== 2 || result.activePageNumber !== '02'
+          || !result.hubStartsVisible || !result.videoSoonDisabled || !result.editorOpens || !result.hubReturns) process.exitCode = 1;
       } catch (error) {
         console.error(error);
         process.exitCode = 1;

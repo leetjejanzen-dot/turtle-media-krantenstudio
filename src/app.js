@@ -95,27 +95,62 @@ $('zoomOut').addEventListener('click',()=>setZoom(zoom-.1));$('zoomIn').addEvent
 try { const saved=JSON.parse(localStorage.getItem('fivem-krantenstudio-autosave')); if(saved) applyProject(saved); else {pages=[readPage()];hydrated=true;render();} } catch {pages=[readPage()];hydrated=true;render();}
 requestAnimationFrame(fitPage);
 
+const hubView = $('hubView');
+const editorView = $('editorView');
+function showHub() {
+  editorView.hidden = true;
+  hubView.hidden = false;
+  document.body.classList.add('hub-open');
+}
+function showEditor() {
+  hubView.hidden = true;
+  editorView.hidden = false;
+  document.body.classList.remove('hub-open');
+  requestAnimationFrame(fitPage);
+}
+$('openNewspaper').addEventListener('click', showEditor);
+$('backToHub').addEventListener('click', showHub);
+showHub();
+
 async function initializePublisherLinks() {
   try {
     const update = await window.desktop.checkUpdates();
-    if (update.storeUrl) $('fourthwallButton').hidden = false;
+    if (update.storeUrl) {
+      $('fourthwallButton').hidden = false;
+      $('hubFourthwallButton').hidden = false;
+    }
     if (update.available) {
-      $('updateButton').hidden = false;
-      $('updateButton').textContent = `Update ${update.version} beschikbaar`;
-      $('updateButton').dataset.available = 'true';
+      for (const id of ['updateButton','hubUpdateButton']) {
+        $(id).hidden = false;
+        $(id).textContent = `Update ${update.version} beschikbaar`;
+        $(id).dataset.available = 'true';
+      }
     }
   } catch {
     // De app blijft volledig bruikbaar wanneer de updatecontrole offline is.
   }
 }
-$('fourthwallButton').addEventListener('click', async () => {
+async function openStore() {
   try { await window.desktop.openStore(); } catch { toast('Fourthwall kon niet worden geopend'); }
-});
-$('updateButton').addEventListener('click', async () => {
-  if ($('updateButton').dataset.available !== 'true') return;
-  $('updateButton').disabled = true;
-  $('updateButton').textContent = 'Update downloaden…';
+}
+$('fourthwallButton').addEventListener('click', openStore);
+$('hubFourthwallButton').addEventListener('click', openStore);
+async function installAvailableUpdate(sourceButton) {
+  if (sourceButton.dataset.available !== 'true') return;
+  const updateButtons = [$('updateButton'),$('hubUpdateButton')];
+  for (const button of updateButtons) {
+    button.disabled = true;
+    button.textContent = 'Update downloaden…';
+  }
   try { await window.desktop.installUpdate(); }
-  catch { $('updateButton').disabled = false; $('updateButton').textContent = 'Update opnieuw proberen'; toast('De update kon niet veilig worden geïnstalleerd'); }
-});
+  catch {
+    for (const button of updateButtons) {
+      button.disabled = false;
+      button.textContent = 'Update opnieuw proberen';
+    }
+    toast('De update kon niet veilig worden geïnstalleerd');
+  }
+}
+$('updateButton').addEventListener('click',event=>installAvailableUpdate(event.currentTarget));
+$('hubUpdateButton').addEventListener('click',event=>installAvailableUpdate(event.currentTarget));
 initializePublisherLinks();

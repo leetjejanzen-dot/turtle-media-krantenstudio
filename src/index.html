@@ -3,23 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Turtle Media Krantenstudio</title>
+  <title>Turtle Media Creator Hub</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="appbar">
-    <img class="app-logo" src="assets/turtle-media-logo.png" alt="Turtle Media">
-    <div><strong>Turtle Media Krantenstudio</strong><span>Nieuws maken voor jouw FiveM-stad</span></div>
-    <nav>
-      <button id="fourthwallButton" class="ghost" hidden>Fourthwall</button>
-      <button id="updateButton" class="update" hidden>Update beschikbaar</button>
-      <button id="newProject" class="ghost">Nieuw</button>
-      <button id="loadProject" class="ghost">Openen</button>
-      <button id="saveProject" class="ghost">Opslaan</button>
-      <button id="exportPng">Export PNG</button>
-      <button id="exportPdf" class="accent">Export PDF</button>
-    </nav>
-  </header>
+  <section id="hubView" class="app-view hub-view">
+    <header class="hub-topbar">
+      <div class="hub-brand">
+        <img src="assets/turtle-media-logo.png" alt="Turtle Media">
+        <div><strong>Turtle Media Creator Hub</strong><span>Alles voor jouw FiveM-redactie</span></div>
+      </div>
+      <nav>
+        <button id="hubFourthwallButton" class="ghost" hidden>Fourthwall</button>
+        <button id="hubUpdateButton" class="update" hidden>Update beschikbaar</button>
+      </nav>
+    </header>
+
+    <main class="hub-main">
+      <div class="hub-intro">
+        <span class="hub-kicker">Turtle Media Creator Suite</span>
+        <h1>Wat wil je vandaag maken?</h1>
+        <p>Kies een studio en begin direct. Je projecten blijven lokaal op je eigen computer bewaard.</p>
+      </div>
+
+      <div class="tool-grid">
+        <button id="openNewspaper" class="tool-card newspaper-tool" type="button">
+          <span class="tool-status available">Beschikbaar</span>
+          <span class="tool-icon newspaper-icon" aria-hidden="true"><span>TM</span></span>
+          <span class="tool-copy">
+            <small>Publicatie &amp; nieuws</small>
+            <strong>Krantenstudio</strong>
+            <span>Maak complete kranten met meerdere pagina’s, eigen foto’s en een live voorbeeld.</span>
+          </span>
+          <span class="tool-tags"><span>Meerdere pagina’s</span><span>PNG</span><span>PDF</span></span>
+          <span class="tool-action">Open Krantenstudio <b>→</b></span>
+        </button>
+
+        <button class="tool-card video-tool" type="button" disabled aria-disabled="true">
+          <span class="tool-status soon">Binnenkort</span>
+          <span class="tool-icon video-icon" aria-hidden="true"><span>▶</span></span>
+          <span class="tool-copy">
+            <small>Beeld &amp; montage</small>
+            <strong>Video Studio</strong>
+            <span>Monteer reportages, voeg titels toe en maak video’s klaar voor jouw FiveM-community.</span>
+          </span>
+          <span class="tool-tags"><span>Montage</span><span>Titels</span><span>Export</span></span>
+          <span class="tool-action muted">In ontwikkeling</span>
+        </button>
+      </div>
+
+      <footer class="hub-footer"><span>Turtle Media</span><span>Jouw redactie. Jouw verhaal.</span></footer>
+    </main>
+  </section>
+
+  <section id="editorView" class="app-view editor-view" hidden>
+    <header class="appbar">
+      <img class="app-logo" src="assets/turtle-media-logo.png" alt="Turtle Media">
+      <div><strong>Turtle Media Krantenstudio</strong><span>Nieuws maken voor jouw FiveM-stad</span></div>
+      <nav>
+        <button id="backToHub" class="ghost">← Hub</button>
+        <button id="fourthwallButton" class="ghost" hidden>Fourthwall</button>
+        <button id="updateButton" class="update" hidden>Update beschikbaar</button>
+        <button id="newProject" class="ghost">Nieuw</button>
+        <button id="loadProject" class="ghost">Openen</button>
+        <button id="saveProject" class="ghost">Opslaan</button>
+        <button id="exportPng">Export PNG</button>
+        <button id="exportPdf" class="accent">Export PDF</button>
+      </nav>
+    </header>
 
   <main class="workspace">
     <aside class="editor">
@@ -109,7 +160,8 @@ Onze verslaggever sprak met ondernemers, hulpdiensten en omwonenden. Zij zien vo
         </article>
       </div>
     </section>
-  </main>
+    </main>
+  </section>
   <div id="toast" role="status"></div>
   <script src="../node_modules/html2canvas/dist/html2canvas.min.js"></script>
   <script src="app.js"></script>
