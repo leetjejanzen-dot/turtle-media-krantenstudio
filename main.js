@@ -8,6 +8,9 @@ const { PDFDocument } = require('pdf-lib');
 let mainWindow;
 let pendingUpdate = null;
 
+// Voorkomt GPU-driverproblemen op uiteenlopende Windows-pc's; de editor heeft geen 3D-versnelling nodig.
+app.disableHardwareAcceleration();
+
 async function readPublisherConfig() {
   const configPath = app.isPackaged
     ? path.join(process.resourcesPath, 'publisher-config.json')
