@@ -139,7 +139,7 @@ function createWindow() {
           document.getElementById('openNewspaper').click();
           const editorOpens = hubView.hidden && !editorView.hidden;
           document.getElementById('newProject').click();
-          const required = ['hubView','editorView','openNewspaper','backToHub','hubUpdateButton','paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton','updateDialog','updateInstall','updateManual','updateProgress'];
+          const required = ['hubView','editorView','openNewspaper','backToHub','hubUpdateButton','hubVersion','hubFooterVersion','paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton','updateDialog','updateInstall','updateManual','updateProgress'];
           const missing = required.filter(id => !document.getElementById(id));
           const logo = document.getElementById('vLogo');
           const editor = document.querySelector('.editor');
@@ -158,6 +158,9 @@ function createWindow() {
             videoSoonDisabled,
             editorOpens,
             hubReturns,
+            ambientElements: document.querySelectorAll('.hub-ambient span').length,
+            desktopMethods: Object.keys(window.desktop || {}),
+            versionLabel: document.getElementById('hubVersion').textContent,
             name: document.getElementById('paperName').value,
             headline: document.getElementById('vHeadline').textContent,
             logoLoaded: logo.complete && logo.naturalWidth > 0,
@@ -171,6 +174,9 @@ function createWindow() {
           };
         })()`);
         await fs.mkdir(path.join(__dirname, 'test-output'), { recursive: true });
+        await mainWindow.webContents.executeJavaScript(`new Promise(resolve => setTimeout(resolve, 1100))`);
+        const hubImage = await mainWindow.webContents.capturePage();
+        await fs.writeFile(path.join(__dirname, 'test-output', 'hub-smoke.png'), hubImage.toPNG());
         await mainWindow.webContents.executeJavaScript(`document.getElementById('openNewspaper').click()`);
         const editorImage = await mainWindow.webContents.capturePage();
         await fs.writeFile(path.join(__dirname, 'test-output', 'app-smoke.png'), editorImage.toPNG());
@@ -188,7 +194,8 @@ function createWindow() {
         if (result.missing.length || result.name !== 'TURTLE MEDIA' || !result.logoLoaded
           || result.newspaperLayoutWidth !== 794 || !result.editorScrollable || !result.bottomActionsVisible
           || result.initialPageCount !== 1 || result.pageCount !== 2 || result.activePageNumber !== '02'
-          || !result.hubStartsVisible || !result.videoSoonDisabled || !result.editorOpens || !result.hubReturns) process.exitCode = 1;
+          || !result.hubStartsVisible || !result.videoSoonDisabled || !result.editorOpens || !result.hubReturns
+          || result.ambientElements < 8 || !result.desktopMethods.includes('getAppInfo')) process.exitCode = 1;
       } catch (error) {
         console.error(error);
         process.exitCode = 1;
@@ -202,6 +209,11 @@ function createWindow() {
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+
+ipcMain.handle('get-app-info', () => ({
+  version: app.getVersion(),
+  name: app.getName()
+}));
 
 ipcMain.handle('save-project', async (_event, project) => {
   const result = await dialog.showSaveDialog(mainWindow, {

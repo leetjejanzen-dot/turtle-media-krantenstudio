@@ -112,6 +112,21 @@ $('openNewspaper').addEventListener('click', showEditor);
 $('backToHub').addEventListener('click', showHub);
 showHub();
 
+async function initializeAppInfo() {
+  try {
+    const info = await window.desktop.getAppInfo();
+    const version = String(info && info.version ? info.version : '').trim();
+    if (!version) throw new Error('Versie ontbreekt');
+    $('hubVersion').textContent = `Turtle Media v${version}`;
+    $('hubFooterVersion').textContent = `v${version}`;
+    document.documentElement.dataset.appVersion = version;
+  } catch {
+    $('hubVersion').textContent = 'Turtle Media';
+    $('hubFooterVersion').textContent = '';
+  }
+}
+initializeAppInfo();
+
 let availableUpdate = null;
 function setUpdateButtons(label, disabled = false) {
   for (const id of ['updateButton','hubUpdateButton']) {

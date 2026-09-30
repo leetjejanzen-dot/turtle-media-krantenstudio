@@ -8,12 +8,23 @@
 </head>
 <body>
   <section id="hubView" class="app-view hub-view">
+    <div class="hub-ambient" aria-hidden="true">
+      <span class="ambient-orb orb-one"></span>
+      <span class="ambient-orb orb-two"></span>
+      <span class="ambient-orb orb-three"></span>
+      <span class="ambient-ring ring-one"></span>
+      <span class="ambient-ring ring-two"></span>
+      <span class="ambient-spark spark-one"></span>
+      <span class="ambient-spark spark-two"></span>
+      <span class="ambient-spark spark-three"></span>
+    </div>
     <header class="hub-topbar">
       <div class="hub-brand">
         <img src="assets/turtle-media-logo.png" alt="Turtle Media">
         <div><strong>Turtle Media Creator Hub</strong><span>Alles voor jouw FiveM-redactie</span></div>
       </div>
       <nav>
+        <span class="hub-version" id="hubVersion" aria-label="Geïnstalleerde appversie">Versie laden…</span>
         <button id="hubFourthwallButton" class="ghost" hidden>Fourthwall</button>
         <button id="hubUpdateButton" class="update" hidden>Update beschikbaar</button>
       </nav>
@@ -52,7 +63,7 @@
         </button>
       </div>
 
-      <footer class="hub-footer"><span>Turtle Media</span><span>Jouw redactie. Jouw verhaal.</span></footer>
+      <footer class="hub-footer"><span>Turtle Media · <b id="hubFooterVersion">v—</b></span><span>Jouw redactie. Jouw verhaal.</span></footer>
     </main>
   </section>
 
