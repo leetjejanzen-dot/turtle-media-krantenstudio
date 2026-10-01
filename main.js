@@ -43,15 +43,26 @@ function isNewerVersion(candidate, current) {
 }
 
 function assertGithubUrl(rawUrl) {
+  if (typeof rawUrl !== 'string' || !rawUrl.trim()) throw new Error('Ongeldige update-URL');
   const url = new URL(rawUrl);
   const allowed = url.hostname === 'github.com' || url.hostname.endsWith('.githubusercontent.com');
   if (url.protocol !== 'https:' || !allowed) throw new Error('Onveilige update-URL geweigerd');
   return url.toString();
 }
 
+function assertGithubResponseUrl(responseUrl, requestedUrl) {
+  // Electron/Chromium kan na een geslaagde redirect een lege response.url
+  // teruggeven. Val dan terug op de reeds gevalideerde aanvraag-URL.
+  const candidate = typeof responseUrl === 'string' && responseUrl.trim()
+    ? responseUrl
+    : requestedUrl;
+  return assertGithubUrl(candidate);
+}
+
 async function fetchBuffer(url, maxBytes = 300 * 1024 * 1024) {
-  const response = await net.fetch(assertGithubUrl(url), { redirect: 'follow' });
-  assertGithubUrl(response.url);
+  const requestedUrl = assertGithubUrl(url);
+  const response = await net.fetch(requestedUrl, { redirect: 'follow' });
+  assertGithubResponseUrl(response.url, requestedUrl);
   if (!response.ok) throw new Error(`Download mislukt (${response.status})`);
   const length = Number(response.headers.get('content-length') || 0);
   if (length > maxBytes) throw new Error('Updatebestand is onverwacht groot');
@@ -69,8 +80,9 @@ async function downloadInstaller(update, installerPath) {
   const maxBytes = 300 * 1024 * 1024;
   const temporaryPath = `${installerPath}.download`;
   await fs.rm(temporaryPath, { force: true });
-  const response = await net.fetch(assertGithubUrl(update.installerUrl), { redirect: 'follow' });
-  assertGithubUrl(response.url);
+  const requestedUrl = assertGithubUrl(update.installerUrl);
+  const response = await net.fetch(requestedUrl, { redirect: 'follow' });
+  assertGithubResponseUrl(response.url, requestedUrl);
   if (!response.ok || !response.body) throw new Error(`Download mislukt (${response.status})`);
   const total = Number(response.headers.get('content-length') || 0);
   if (total > maxBytes) throw new Error('Updatebestand is onverwacht groot');
@@ -130,6 +142,12 @@ function createWindow() {
   if (smokeTest) {
     mainWindow.webContents.once('did-finish-load', async () => {
       try {
+        const updaterUrlFallback = assertGithubResponseUrl('', 'https://github.com/leetjejanzen-dot/turtle-media-krantenstudio/releases/download/v1.2.0/test.exe');
+        if (!updaterUrlFallback.startsWith('https://github.com/')) throw new Error('Updater URL-fallback is defect');
+        let unsafeUpdaterUrlRejected = false;
+        try { assertGithubResponseUrl('https://example.com/update.exe', 'https://github.com/fallback'); }
+        catch { unsafeUpdaterUrlRejected = true; }
+        if (!unsafeUpdaterUrlRejected) throw new Error('Onveilige updater-URL is niet geweigerd');
         const result = await mainWindow.webContents.executeJavaScript(`(() => {
           localStorage.removeItem('fivem-krantenstudio-autosave');
           const hubView = document.getElementById('hubView');
