@@ -154,6 +154,7 @@ function createWindow() {
           const editorView = document.getElementById('editorView');
           const hubStartsVisible = !hubView.hidden && editorView.hidden;
           const videoSoonDisabled = document.querySelector('.video-tool').disabled;
+          const podcastSoonDisabled = document.querySelector('.podcast-tool').disabled;
           document.getElementById('openNewspaper').click();
           const editorOpens = hubView.hidden && !editorView.hidden;
           document.getElementById('newProject').click();
@@ -174,6 +175,7 @@ function createWindow() {
             missing,
             hubStartsVisible,
             videoSoonDisabled,
+            podcastSoonDisabled,
             editorOpens,
             hubReturns,
             ambientElements: document.querySelectorAll('.hub-ambient span').length,
@@ -212,7 +214,7 @@ function createWindow() {
         if (result.missing.length || result.name !== 'TURTLE MEDIA' || !result.logoLoaded
           || result.newspaperLayoutWidth !== 794 || !result.editorScrollable || !result.bottomActionsVisible
           || result.initialPageCount !== 1 || result.pageCount !== 2 || result.activePageNumber !== '02'
-          || !result.hubStartsVisible || !result.videoSoonDisabled || !result.editorOpens || !result.hubReturns
+          || !result.hubStartsVisible || !result.videoSoonDisabled || !result.podcastSoonDisabled || !result.editorOpens || !result.hubReturns
           || result.ambientElements < 8 || !result.desktopMethods.includes('getAppInfo')) process.exitCode = 1;
       } catch (error) {
         console.error(error);
