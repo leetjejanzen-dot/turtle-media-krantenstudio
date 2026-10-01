@@ -2,7 +2,7 @@ const ids = ['paperName','tagline','edition','price','category','headline','dek'
 const $ = (id) => document.getElementById(id);
 const value = (id) => $(id).type === 'checkbox' ? $(id).checked : $(id).value;
 const defaults = Object.fromEntries(ids.map(id => [id, value(id)]));
-const defaultLogo = 'assets/turtle-media-logo-transparent.png';
+const defaultLogo = 'assets/turtle-media-logo.png';
 let logoData = defaultLogo, heroData = '', pages = [], currentPage = 0, zoom = 1, hydrated = false;
 
 function slugify(input) {
