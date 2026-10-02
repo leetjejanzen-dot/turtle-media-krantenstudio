@@ -1,4 +1,8 @@
 {
   "githubRepo": "leetjejanzen-dot/turtle-media-krantenstudio",
-  "fourthwallProductUrl": "https://pixelpeach-nl-shop.fourthwall.com/products/turtle-media-krantenstudio"
+  "fourthwallProductUrl": "https://pixelpeach-nl-shop.fourthwall.com/products/turtle-media-krantenstudio",
+  "discordRecorder": {
+    "clientId": "",
+    "apiBaseUrl": ""
+  }
 }

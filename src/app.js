@@ -97,19 +97,30 @@ requestAnimationFrame(fitPage);
 
 const hubView = $('hubView');
 const editorView = $('editorView');
+const podcastView = $('podcastView');
 function showHub() {
   editorView.hidden = true;
+  podcastView.hidden = true;
   hubView.hidden = false;
   document.body.classList.add('hub-open');
 }
 function showEditor() {
   hubView.hidden = true;
+  podcastView.hidden = true;
   editorView.hidden = false;
   document.body.classList.remove('hub-open');
   requestAnimationFrame(fitPage);
 }
+function showPodcast() {
+  hubView.hidden = true;
+  editorView.hidden = true;
+  podcastView.hidden = false;
+  document.body.classList.remove('hub-open');
+}
 $('openNewspaper').addEventListener('click', showEditor);
+$('openPodcast').addEventListener('click', showPodcast);
 $('backToHub').addEventListener('click', showHub);
+$('backFromPodcast').addEventListener('click', showHub);
 showHub();
 
 async function initializeAppInfo() {

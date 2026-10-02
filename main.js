@@ -20,11 +20,27 @@ async function readPublisherConfig() {
     const parsed = JSON.parse(await fs.readFile(configPath, 'utf8'));
     return {
       githubRepo: typeof parsed.githubRepo === 'string' ? parsed.githubRepo.trim() : '',
-      fourthwallProductUrl: typeof parsed.fourthwallProductUrl === 'string' ? parsed.fourthwallProductUrl.trim() : ''
+      fourthwallProductUrl: typeof parsed.fourthwallProductUrl === 'string' ? parsed.fourthwallProductUrl.trim() : '',
+      discordRecorder: {
+        clientId: typeof parsed.discordRecorder?.clientId === 'string' ? parsed.discordRecorder.clientId.trim() : '',
+        apiBaseUrl: typeof parsed.discordRecorder?.apiBaseUrl === 'string' ? parsed.discordRecorder.apiBaseUrl.trim().replace(/\/$/, '') : ''
+      }
     };
   } catch {
-    return { githubRepo: '', fourthwallProductUrl: '' };
+    return { githubRepo: '', fourthwallProductUrl: '', discordRecorder: { clientId: '', apiBaseUrl: '' } };
   }
+}
+
+function validRecorderConfig(config) {
+  const clientId = /^\d{15,25}$/.test(config.clientId) ? config.clientId : '';
+  let apiBaseUrl = '';
+  try {
+    const url = new URL(config.apiBaseUrl);
+    if (url.protocol === 'https:' || (url.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(url.hostname))) {
+      apiBaseUrl = url.toString().replace(/\/$/, '');
+    }
+  } catch {}
+  return { clientId, apiBaseUrl, configured: !!(clientId && apiBaseUrl) };
 }
 
 function githubSlug(input) {
@@ -138,7 +154,15 @@ function createWindow() {
     }
   });
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
+  mainWindow.webContents.session.setPermissionRequestHandler((webContents, permission, callback, details) => {
+    const localApp = webContents === mainWindow.webContents && webContents.getURL().startsWith('file:');
+    const audioOnly = permission === 'media'
+      && Array.isArray(details.mediaTypes)
+      && details.mediaTypes.length === 1
+      && details.mediaTypes[0] === 'audio';
+    callback(localApp && audioOnly);
+  });
+  mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'), smokeTest ? { query: { 'smoke-test': '1' } } : undefined);
   if (smokeTest) {
     mainWindow.webContents.once('did-finish-load', async () => {
       try {
@@ -148,17 +172,25 @@ function createWindow() {
         try { assertGithubResponseUrl('https://example.com/update.exe', 'https://github.com/fallback'); }
         catch { unsafeUpdaterUrlRejected = true; }
         if (!unsafeUpdaterUrlRejected) throw new Error('Onveilige updater-URL is niet geweigerd');
-        const result = await mainWindow.webContents.executeJavaScript(`(() => {
+        const result = await mainWindow.webContents.executeJavaScript(`(async () => {
           localStorage.removeItem('fivem-krantenstudio-autosave');
           const hubView = document.getElementById('hubView');
           const editorView = document.getElementById('editorView');
-          const hubStartsVisible = !hubView.hidden && editorView.hidden;
+          const podcastView = document.getElementById('podcastView');
+          const hubStartsVisible = !hubView.hidden && editorView.hidden && podcastView.hidden;
           const videoSoonDisabled = document.querySelector('.video-tool').disabled;
-          const podcastSoonDisabled = document.querySelector('.podcast-tool').disabled;
+          const podcastAvailable = !document.querySelector('.podcast-tool').disabled;
+          document.getElementById('openPodcast').click();
+          const podcastOpens = hubView.hidden && editorView.hidden && !podcastView.hidden;
+          const podcastAudio = typeof window.__podcastSmoke === 'function'
+            ? await window.__podcastSmoke().catch(error => ({ error: error.message }))
+            : { error: 'Podcast-smoketest ontbreekt' };
+          document.getElementById('backFromPodcast').click();
+          const podcastReturns = !hubView.hidden && editorView.hidden && podcastView.hidden;
           document.getElementById('openNewspaper').click();
-          const editorOpens = hubView.hidden && !editorView.hidden;
+          const editorOpens = hubView.hidden && !editorView.hidden && podcastView.hidden;
           document.getElementById('newProject').click();
-          const required = ['hubView','editorView','openNewspaper','backToHub','hubUpdateButton','hubVersion','hubFooterVersion','paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton','updateDialog','updateInstall','updateManual','updateProgress'];
+          const required = ['hubView','podcastView','editorView','openNewspaper','openPodcast','backFromPodcast','backToHub','hubUpdateButton','hubVersion','hubFooterVersion','podcastTracks','podcastFileInput','podcastExport','installDiscordBot','paperName','headline','article','newspaper','exportPng','exportPdf','exportPngBottom','exportPdfBottom','zoomFit','vLogo','pageTabs','addPage','updateButton','updateDialog','updateInstall','updateManual','updateProgress'];
           const missing = required.filter(id => !document.getElementById(id));
           const logo = document.getElementById('vLogo');
           const editor = document.querySelector('.editor');
@@ -170,12 +202,15 @@ function createWindow() {
           const editorScrollable = editor.scrollHeight > editor.clientHeight && editor.scrollTop > 0;
           const bottomActionsVisible = document.getElementById('exportPngBottom').getBoundingClientRect().bottom <= innerHeight;
           document.getElementById('backToHub').click();
-          const hubReturns = !hubView.hidden && editorView.hidden;
+          const hubReturns = !hubView.hidden && editorView.hidden && podcastView.hidden;
           return {
             missing,
             hubStartsVisible,
             videoSoonDisabled,
-            podcastSoonDisabled,
+            podcastAvailable,
+            podcastOpens,
+            podcastReturns,
+            podcastAudio,
             editorOpens,
             hubReturns,
             ambientElements: document.querySelectorAll('.hub-ambient span').length,
@@ -197,6 +232,12 @@ function createWindow() {
         await mainWindow.webContents.executeJavaScript(`new Promise(resolve => setTimeout(resolve, 1100))`);
         const hubImage = await mainWindow.webContents.capturePage();
         await fs.writeFile(path.join(__dirname, 'test-output', 'hub-smoke.png'), hubImage.toPNG());
+        const podcastCaptureState = await mainWindow.webContents.executeJavaScript(`(() => { document.getElementById('openPodcast').click(); dispatchEvent(new Event('resize')); return { hub: document.getElementById('hubView').hidden, podcast: document.getElementById('podcastView').hidden, editor: document.getElementById('editorView').hidden }; })()`);
+        console.log(JSON.stringify({ podcastCaptureState }));
+        await mainWindow.webContents.executeJavaScript(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+        const podcastImage = await mainWindow.webContents.capturePage();
+        await fs.writeFile(path.join(__dirname, 'test-output', 'podcast-smoke.png'), podcastImage.toPNG());
+        await mainWindow.webContents.executeJavaScript(`document.getElementById('backFromPodcast').click()`);
         await mainWindow.webContents.executeJavaScript(`document.getElementById('openNewspaper').click()`);
         const editorImage = await mainWindow.webContents.capturePage();
         await fs.writeFile(path.join(__dirname, 'test-output', 'app-smoke.png'), editorImage.toPNG());
@@ -214,8 +255,10 @@ function createWindow() {
         if (result.missing.length || result.name !== 'TURTLE MEDIA' || !result.logoLoaded
           || result.newspaperLayoutWidth !== 794 || !result.editorScrollable || !result.bottomActionsVisible
           || result.initialPageCount !== 1 || result.pageCount !== 2 || result.activePageNumber !== '02'
-          || !result.hubStartsVisible || !result.videoSoonDisabled || !result.podcastSoonDisabled || !result.editorOpens || !result.hubReturns
-          || result.ambientElements < 8 || !result.desktopMethods.includes('getAppInfo')) process.exitCode = 1;
+          || !result.hubStartsVisible || !result.videoSoonDisabled || !result.podcastAvailable || !result.podcastOpens || !result.podcastReturns || !result.editorOpens || !result.hubReturns
+          || result.podcastAudio.trackCount !== 1 || !result.podcastAudio.playbackAdvanced || result.podcastAudio.wavHeader !== 'RIFF' || result.podcastAudio.wavBytes <= 44
+          || result.ambientElements < 8 || !result.desktopMethods.includes('getAppInfo')
+          || !result.desktopMethods.includes('savePodcastAudio') || !result.desktopMethods.includes('getRecorderConfig') || !result.desktopMethods.includes('openDiscordBotInvite')) process.exitCode = 1;
       } catch (error) {
         console.error(error);
         process.exitCode = 1;
@@ -286,6 +329,34 @@ ipcMain.handle('save-pdf', async (_event, payload) => {
   }
   await fs.writeFile(result.filePath, await pdf.save());
   return { canceled: false, path: result.filePath };
+});
+
+ipcMain.handle('save-podcast-audio', async (_event, payload) => {
+  const bytes = payload?.bytes;
+  if (!(bytes instanceof Uint8Array) && !Buffer.isBuffer(bytes)) throw new Error('Ongeldig audiobestand');
+  if (bytes.byteLength < 44 || bytes.byteLength > 1024 * 1024 * 1024) throw new Error('Audiobestand heeft een ongeldige grootte');
+  const safeName = String(payload?.name || 'turtle-media-podcast').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '').slice(0, 80) || 'turtle-media-podcast';
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: 'Podcast exporteren als WAV',
+    defaultPath: `${safeName}.wav`,
+    filters: [{ name: 'WAV-audio', extensions: ['wav'] }]
+  });
+  if (result.canceled) return { canceled: true };
+  await fs.writeFile(result.filePath, Buffer.from(bytes));
+  return { canceled: false, path: result.filePath };
+});
+
+ipcMain.handle('get-recorder-config', async () => validRecorderConfig((await readPublisherConfig()).discordRecorder));
+
+ipcMain.handle('open-discord-bot-invite', async () => {
+  const config = validRecorderConfig((await readPublisherConfig()).discordRecorder);
+  if (!config.clientId) throw new Error('De Turtle Media Recorder-bot is nog niet gepubliceerd');
+  const invite = new URL('https://discord.com/oauth2/authorize');
+  invite.searchParams.set('client_id', config.clientId);
+  invite.searchParams.set('scope', 'bot applications.commands');
+  invite.searchParams.set('permissions', '3148800');
+  await shell.openExternal(invite.toString());
+  return { opened: true };
 });
 
 ipcMain.handle('check-updates', async () => {

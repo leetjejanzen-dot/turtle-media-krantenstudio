@@ -62,8 +62,8 @@
           <span class="tool-action muted">In ontwikkeling</span>
         </button>
 
-        <button class="tool-card podcast-tool" type="button" disabled aria-disabled="true">
-          <span class="tool-status soon">Binnenkort</span>
+        <button id="openPodcast" class="tool-card podcast-tool" type="button">
+          <span class="tool-status available">Beschikbaar</span>
           <span class="tool-icon podcast-icon" aria-hidden="true"><span>🎙</span></span>
           <span class="tool-copy">
             <small>Audio &amp; uitzending</small>
@@ -71,11 +71,71 @@
             <span>Neem gesprekken op, monteer afleveringen en maak podcasts klaar voor publicatie.</span>
           </span>
           <span class="tool-tags"><span>Opname</span><span>Montage</span><span>Publicatie</span></span>
-          <span class="tool-action muted">In ontwikkeling</span>
+          <span class="tool-action">Open Podcast Studio <b>→</b></span>
         </button>
       </div>
 
       <footer class="hub-footer"><span>Turtle Media · <b id="hubFooterVersion">v—</b></span><span>Jouw redactie. Jouw verhaal.</span></footer>
+    </main>
+  </section>
+
+  <section id="podcastView" class="app-view podcast-view" hidden>
+    <header class="appbar podcast-appbar">
+      <button id="backFromPodcast" class="icon-button" title="Terug naar Creator Hub" aria-label="Terug naar Creator Hub">←</button>
+      <img class="app-logo" src="assets/turtle-media-logo-light.png" alt="Turtle Media">
+      <div class="editor-brand"><strong>Podcast Studio</strong><span><i></i> Opnames blijven lokaal tot je exporteert</span></div>
+      <nav>
+        <span class="podcast-quality">48 kHz studio-project</span>
+        <button id="podcastImportTop" class="ghost" type="button">Audio importeren</button>
+        <button id="podcastExport" class="accent" type="button">Mix exporteren</button>
+      </nav>
+    </header>
+
+    <main class="podcast-workspace">
+      <aside class="podcast-sidebar">
+        <section class="podcast-panel discord-panel">
+          <div class="podcast-panel-heading"><span class="panel-number">01</span><div><strong>Discord-opname</strong><small>Iedere spreker als apart spoor</small></div></div>
+          <div id="discordRecorderStatus" class="recorder-status"><i></i><span>Recorderconfiguratie controleren…</span></div>
+          <button id="installDiscordBot" class="discord-button" type="button">Discord-bot toevoegen</button>
+          <label>Sessienaam<input id="discordSessionName" value="Nieuwe Turtle Media Podcast" maxlength="80"></label>
+          <button id="createDiscordSession" class="ghost wide" type="button">Nieuwe opnamesessie</button>
+          <div id="discordSessionInfo" class="session-code" hidden><small>Gebruik deze code bij <b>/podcast start</b></small><strong id="discordJoinCode">——</strong><span id="discordConsentNote">Alleen deelnemers die toestemming geven worden opgenomen.</span></div>
+          <button id="syncDiscordTracks" class="ghost wide" type="button" disabled>Discord-sporen ophalen</button>
+        </section>
+
+        <section class="podcast-panel mic-panel">
+          <div class="podcast-panel-heading"><span class="panel-number">02</span><div><strong>Lokale microfoon</strong><small>Ongecomprimeerde bron voor de presentator</small></div></div>
+          <label class="consent-check"><input id="recordingConsent" type="checkbox"><span>Iedere deelnemer weet dat deze opname wordt gemaakt.</span></label>
+          <button id="toggleMicRecording" class="record-button" type="button"><i></i><span>Opname starten</span></button>
+          <p id="micRecordingTime" class="recording-time">00:00</p>
+        </section>
+
+        <section class="podcast-panel import-panel">
+          <div class="podcast-panel-heading"><span class="panel-number">03</span><div><strong>Bestanden</strong><small>WAV, MP3, M4A, OGG of WebM</small></div></div>
+          <input id="podcastFileInput" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.opus,.webm" multiple hidden>
+          <button id="podcastImport" class="ghost wide" type="button">＋ Audio importeren</button>
+          <p class="privacy-note">Audio wordt standaard alleen op deze computer verwerkt.</p>
+        </section>
+      </aside>
+
+      <section class="podcast-editor">
+        <div class="podcast-transport">
+          <button id="podcastRewind" class="transport-button" type="button" aria-label="Terug naar begin">↶</button>
+          <button id="podcastPlay" class="play-button" type="button" aria-label="Afspelen">▶</button>
+          <div class="time-display"><strong id="podcastCurrentTime">00:00.000</strong><span>/</span><span id="podcastDuration">00:00.000</span></div>
+          <input id="podcastSeek" class="podcast-seek" type="range" min="0" max="1" step="0.001" value="0">
+          <button id="podcastAddMarker" class="ghost" type="button">＋ Marker</button>
+        </div>
+        <div class="timeline-ruler" id="timelineRuler"></div>
+        <div id="podcastEmpty" class="podcast-empty">
+          <div class="empty-mic">🎙</div>
+          <h2>Begin je eerste aflevering</h2>
+          <p>Importeer audio, neem lokaal op of verbind de Turtle Media Recorder met een Discord-call.</p>
+          <button id="podcastEmptyImport" class="accent" type="button">Audio importeren</button>
+        </div>
+        <div id="podcastTracks" class="podcast-tracks"></div>
+        <div id="podcastMarkers" class="podcast-markers"></div>
+      </section>
     </main>
   </section>
 
@@ -211,5 +271,6 @@ Onze verslaggever sprak met ondernemers, hulpdiensten en omwonenden. Zij zien vo
   <div id="toast" role="status"></div>
   <script src="../node_modules/html2canvas/dist/html2canvas.min.js"></script>
   <script src="app.js"></script>
+  <script src="podcast.js"></script>
 </body>
 </html>

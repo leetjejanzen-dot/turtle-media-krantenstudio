@@ -14,7 +14,10 @@ Een Windows-app waarmee Turtle Media professionele krantenpagina's voor een Five
 - Alle pagina's bundelen in één printklare A4-PDF
 - Veilige updates via GitHub Releases met SHA-256-controle
 - Fourthwall-knop voor de officiële product- en downloadpagina
-- Werkt volledig lokaal; teksten en afbeeldingen worden niet geüpload
+- Podcast Studio met losse sporen, waveform, volume, dempen, markers en 48 kHz WAV-export
+- Ongecomprimeerde lokale 48 kHz-microfoonopname met expliciete toestemmingscontrole
+- Optionele Discord Recorder voor afzonderlijke, gesynchroniseerde sprekersporen
+- Kranten, afbeeldingen en lokale podcastopnames worden niet geüpload
 
 ## Ontwikkelen
 
@@ -34,3 +37,7 @@ bijbehorend `.sha256`-bestand en upload beide bestanden naar dezelfde GitHub Rel
 
 Vul voor het bouwen `publisher-config.json` met de GitHub-repository (`eigenaar/repo`)
 en de openbare Fourthwall-product-URL.
+
+De Discord Recorder is bewust een losse serverdienst, zodat de geheime bottoken nooit
+in de Windows-app terechtkomt. Zie `discord-recorder-service/README.md` voor installatie,
+privacy en configuratie.
