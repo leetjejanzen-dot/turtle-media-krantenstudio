@@ -156,7 +156,7 @@ const podcastCommand = new SlashCommandBuilder()
   .addSubcommand(command => command.setName('consent').setDescription('Geef toestemming om jouw stem in deze sessie op te nemen'))
   .addSubcommand(command => command.setName('stop').setDescription('Stop de huidige opnamesessie'));
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   await new REST({ version: '10' }).setToken(TOKEN).put(Routes.applicationCommands(CLIENT_ID), { body: [podcastCommand.toJSON()] });
   console.log(`Turtle Media Recorder online als ${client.user.tag}`);
 });
@@ -253,7 +253,12 @@ app.get('/v1/sessions/:id/tracks/:trackId', (req, res) => {
 setInterval(() => {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   for (const [id, session] of sessions) {
-    if (new Date(session.createdAt).getTime() < cutoff && session.state !== 'recording') sessions.delete(id);
+    if (new Date(session.createdAt).getTime() < cutoff && session.state !== 'recording') {
+      sessions.delete(id);
+      fsp.rm(sessionDirectory(session), { recursive: true, force: true }).catch(error => {
+        console.error(`Kon verlopen sessie ${id} niet verwijderen:`, error.message);
+      });
+    }
   }
 }, 60 * 60 * 1000).unref();
 

@@ -22,7 +22,8 @@ Discord levert voice-audio als Opus. Losse sporen voorkomen kwaliteitsverlies do
 - Zet HTTPS-reverse-proxying voor `PUBLIC_BASE_URL` voor de API.
 - Vul daarna `discordRecorder.clientId` en `discordRecorder.apiBaseUrl` in de `publisher-config.json` van de app-build in.
 
-Installeer met `npm install` en start met `npm start`. Op Linux kan deze dienst als een afzonderlijk systemd- of Docker-proces draaien.
+Kopieer `.env.example` naar `.env`, installeer met `npm install` en start met `npm start`.
+Op Linux kan deze dienst als een afzonderlijk systemd- of Docker-proces draaien.
 
 ## Privacy
 
