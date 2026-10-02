@@ -116,6 +116,20 @@
           <button id="podcastImport" class="ghost wide" type="button">＋ Audio importeren</button>
           <p class="privacy-note">Audio wordt standaard alleen op deze computer verwerkt.</p>
         </section>
+
+        <section class="podcast-panel sound-design-panel">
+          <div class="podcast-panel-heading"><span class="panel-number">04</span><div><strong>Sound design</strong><small>Intro, outro en effecten op je tijdlijn</small></div></div>
+          <input id="podcastIntroInput" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.opus,.webm" hidden>
+          <input id="podcastOutroInput" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.opus,.webm" hidden>
+          <input id="podcastSfxInput" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.opus,.webm" multiple hidden>
+          <div class="sound-design-grid">
+            <button id="podcastAddIntro" class="sound-design-button" type="button"><b>IN</b><span>Intro toevoegen</span></button>
+            <button id="podcastAddOutro" class="sound-design-button" type="button"><b>OUT</b><span>Outro toevoegen</span></button>
+            <button id="podcastAddSfx" class="sound-design-button sfx" type="button"><b>FX</b><span>Effect op afspeelkop</span></button>
+          </div>
+          <button id="podcastAddBeep" class="ghost wide" type="button">＋ Censor-piep genereren</button>
+          <p class="privacy-note">Effecten worden lokaal verwerkt. Gebruik alleen audio waarvoor je toestemming hebt.</p>
+        </section>
       </aside>
 
       <section class="podcast-editor">
@@ -125,6 +139,11 @@
           <div class="time-display"><strong id="podcastCurrentTime">00:00.000</strong><span>/</span><span id="podcastDuration">00:00.000</span></div>
           <input id="podcastSeek" class="podcast-seek" type="range" min="0" max="1" step="0.001" value="0">
           <button id="podcastAddMarker" class="ghost" type="button">＋ Marker</button>
+        </div>
+        <div class="edit-toolbar">
+          <span><i></i> Multitrack-tijdlijn</span>
+          <small>Sleep clips om ze te plaatsen · gebruik Splitsen om op de afspeelkop te knippen</small>
+          <button id="podcastDeleteMarker" class="ghost" type="button">Laatste marker wissen</button>
         </div>
         <div class="timeline-ruler" id="timelineRuler"></div>
         <div id="podcastEmpty" class="podcast-empty">
